@@ -1,0 +1,8 @@
+name: PositionTimer
+main: com.github.smk7758.PositionTimer.Main
+version: 0.0.1
+author: smk7758
+permissions:
+commands:
+  PositionTimer:
+    description: PositionTimer's command.
