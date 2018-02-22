@@ -2,9 +2,9 @@ package com.github.smk7758.PositionTimer;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -16,27 +16,22 @@ import org.bukkit.scheduler.BukkitTask;
 public class Main extends JavaPlugin {
 	public static final String plugin_name = "PositionTimer";
 	public static boolean debug_mode = true;
+	private final String pos = "Positions";
 	private CommandExecuter command_executer = new CommandExecuter(this);
 	public Map<String, Location> start_positions = new HashMap<>(), end_positions = new HashMap<>();
 	public Map<Player, LocalDateTime> in_timer_player = new HashMap<>();
 	private BukkitTask loop = null;
 
-	public enum Path {
-		start_positions("StartPositions"), end_positions("EndPositions");
-
-		String path;
-
-		private Path(String path) {
-			this.path = path;
-		}
+	public enum PositionType {
+		Start, End;
 	}
 
 	@Override
 	public void onEnable() {
 		if (!Main.plugin_name.equals(getDescription().getName())) getPluginLoader().disablePlugin(this);
-		// getServer().getPluginManager().registerEvents(command_listner, this);
 		getCommand(plugin_name).setExecutor(command_executer);
 		saveDefaultConfig();
+		startLoop();
 	}
 
 	@Override
@@ -45,68 +40,6 @@ public class Main extends JavaPlugin {
 
 	public CommandExecuter getCommandExecuter() {
 		return command_executer;
-	}
-
-	public void loop() {
-		loop = new BukkitRunnable() {
-			@Override
-			public void run() {
-				@SuppressWarnings("unchecked")
-				Stream<Player> players = (Stream<Player>) getServer().getOnlinePlayers().stream();
-				start_positions.values().forEach(loc -> players
-						.filter(player -> player.getLocation().equals(loc) && !in_timer_player.containsKey(player))
-						.forEach(player -> onStartPosition(loc, player)));
-				end_positions.values().forEach(loc -> players
-						.filter(player -> player.getLocation().equals(loc) && in_timer_player.containsKey(player))
-						.forEach(player -> onEndPosition(loc, player)));
-			}
-		}.runTask(this);
-	}
-
-	// TODO
-	public void stopLoop() {
-		loop.cancel();
-	}
-
-	public void startLoop() {
-		loop();
-	}
-
-	// TODO: 以下
-	public void onStartPosition(Location loc, Player player) {
-		in_timer_player.put(player, LocalDateTime.now());
-	}
-
-	public void onEndPosition(Location loc, Player player) {
-		LocalDateTime start_time = in_timer_player.get(player);
-		SendLog.send("Time: " + Duration.between(LocalDateTime.now(), start_time), player);
-		in_timer_player.remove(player);
-	}
-
-	public void setStartPosition(String name, Player player) {
-		setStartPosition(name, player.getLocation().getBlock().getLocation());
-	}
-
-	public void setStartPosition(String name, Location loc) {
-		start_positions.put(name, loc);
-	}
-
-	public void removeStartPosition(String name) {
-		start_positions.remove(name);
-		getConfig().set(Path.start_positions.toString() + "." + name, null);
-	}
-
-	public void setEndPosition(String name, Player player) {
-		setEndPosition(name, player.getLocation().getBlock().getLocation());
-	}
-
-	public void setEndPosition(String name, Location loc) {
-		end_positions.put(name, loc);
-	}
-
-	public void removeEndPosition(String name) {
-		end_positions.remove(name);
-		getConfig().set(Path.end_positions.toString() + "." + name, null);
 	}
 
 	@Override
@@ -125,43 +58,140 @@ public class Main extends JavaPlugin {
 	public void reloadConfig() {
 		super.reloadConfig();
 		loadPositions();
+		debug_mode = getConfig().getBoolean("DebugMode");
 	}
 
-	public void savePositions() {
-		savePosition(start_positions, Path.start_positions);
-		savePosition(end_positions, Path.end_positions);
+	private void loop() {
+		loop = new BukkitRunnable() {
+			@Override
+			public void run() {
+				for (Player player : getServer().getOnlinePlayers()) {
+					if (!in_timer_player.containsKey(player)) {
+						for (Location loc : start_positions.values()) {
+							if (loc != null && player.getLocation().getBlock().getLocation().equals(loc)) {
+								onStartPosition(loc, player);
+							}
+						}
+					} else {
+						for (Location loc : end_positions.values()) {
+							if (loc != null && player.getLocation().getBlock().getLocation().equals(loc)) {
+								onEndPosition(loc, player);
+							}
+						}
+					}
+				}
+				in_timer_player.forEach((player, time) -> SendLog
+						.debug("In: " + player.getName() + ", from: " + time.toString()));
+			}
+		}.runTaskTimer(this, 0, 1);
 	}
 
-	public void savePosition(Map<String, Location> positions, Path path) {
-		positions.entrySet()
-				.forEach(entry -> setConfigLocation(path, entry.getKey(), entry.getValue()));
+	public void stopLoop() {
+		loop.cancel();
 	}
 
-	public void setConfigLocation(Path path, String name, Location loc) {
-		setConfigLocation(path.path + "." + name, loc);
+	public void startLoop() {
+		loop();
 	}
 
-	public void setConfigLocation(String path, Location loc) {
-		getConfig().set(path + ".World", loc.getWorld().getName());
-		getConfig().set(path + ".X", loc.getX());
-		getConfig().set(path + ".Y", loc.getY());
-		getConfig().set(path + ".Z", loc.getZ());
+	public void onStartPosition(Location loc, Player player) {
+		SendLog.debug("onStartPosition");
+		in_timer_player.put(player, LocalDateTime.now());
 	}
 
-	public void loadPositions() {
-		SendLog.debug("loadPositions");
-		loadPosition(start_positions, Path.start_positions);
-		loadPosition(end_positions, Path.end_positions);
+	public void onEndPosition(Location loc, Player player) {
+		LocalDateTime now_time = LocalDateTime.now();
+		SendLog.debug("onEndPosition");
+		LocalDateTime start_time = in_timer_player.get(player);
+		SendLog.debug("End: " + player.getName() + ", from: " + start_time + ", to: " + now_time);
+		SendLog.send("Time: " + getTime(start_time, now_time), player);
+		in_timer_player.remove(player);
 	}
 
-	public void loadPosition(Map<String, Location> positions, Path path) {
-		for (String name : getConfig().getConfigurationSection(path.path).getKeys(false)) {
-			if (name != null) positions.put(name, getConfigLocation(path, name));
+	private String getTime(Temporal start, Temporal end) {
+		Duration duration = Duration.between(start, end);
+		StringBuilder sb = new StringBuilder();
+		sb.append(duration.getSeconds());
+		sb.append('.');
+		sb.append(duration.getNano()).delete(sb.length() - 6, sb.length());
+		sb.append('s');
+		return sb.toString();
+	}
+
+	public void setPosition(String name, PositionType type, Player player) {
+		Location loc = player.getLocation().getBlock().getLocation();
+		switch (type) {
+			case Start:
+				setStartPosition(name, loc);
+				break;
+			case End:
+				setEndPosition(name, loc);
+				break;
+			default:
+				SendLog.error("Please set Position Type.");
 		}
 	}
 
-	public Location getConfigLocation(Path path, String name) {
-		return getConfigLocation(path.path + "." + name);
+	public void setStartPosition(String name, Location loc) {
+		start_positions.put(name, loc);
+		setConfigLocation(PositionType.Start, name, loc);
+	}
+
+	public void removeStartPosition(String name) {
+		start_positions.remove(name);
+		setConfigLocation(PositionType.Start, name, null);
+	}
+
+	public void setEndPosition(String name, Location loc) {
+		end_positions.put(name, loc);
+		setConfigLocation(PositionType.End, name, loc);
+	}
+
+	public void removeEndPosition(String name) {
+		end_positions.remove(name);
+		setConfigLocation(PositionType.End, name, null);
+	}
+
+	// save
+	public void savePositions() {
+		savePosition(start_positions, PositionType.Start);
+		savePosition(end_positions, PositionType.End);
+	}
+
+	public void savePosition(Map<String, Location> positions, PositionType type) {
+		positions.entrySet().forEach(entry -> setConfigLocation(type, entry.getKey(), entry.getValue()));
+	}
+
+	public void setConfigLocation(PositionType type, String name, Location loc) {
+		setConfigLocation(getPositionPath(name, type), loc);
+	}
+
+	public void setConfigLocation(String path, Location loc) {
+		if (loc != null) {
+			getConfig().set(path + ".World", loc.getWorld().getName());
+			getConfig().set(path + ".X", loc.getX());
+			getConfig().set(path + ".Y", loc.getY());
+			getConfig().set(path + ".Z", loc.getZ());
+		} else {
+			getConfig().set(path, null);
+		}
+	}
+
+	// load
+	public void loadPositions() {
+		SendLog.debug("loadPositions");
+		loadPosition(start_positions, PositionType.Start);
+		loadPosition(end_positions, PositionType.End);
+	}
+
+	public void loadPosition(Map<String, Location> positions, PositionType type) {
+		for (String name : getConfig().getConfigurationSection(pos).getKeys(false)) {
+			if (name != null) positions.put(name, getConfigLocation(name, type));
+		}
+	}
+
+	public Location getConfigLocation(String name, PositionType type) {
+		return getConfigLocation(getPositionPath(name, type));
 	}
 
 	public Location getConfigLocation(String path) {
@@ -188,5 +218,19 @@ public class Main extends JavaPlugin {
 			SendLog.debug("Location has been created.");
 			return new Location(world, x, y, z);
 		}
+	}
+
+	private String getPositionPath(String name, PositionType type) {
+		return getPath(pos, name, type.toString());
+	}
+
+	public String getPath(String... paths) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(paths[0]);
+		for (int i = 1; i < paths.length; i++) {
+			sb.append('.');
+			sb.append(paths[i]);
+		}
+		return sb.toString();
 	}
 }

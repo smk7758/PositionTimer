@@ -1,6 +1,6 @@
 name: PositionTimer
 main: com.github.smk7758.PositionTimer.Main
-version: 0.0.1
+version: 0.0.3
 author: smk7758
 permissions:
 commands:

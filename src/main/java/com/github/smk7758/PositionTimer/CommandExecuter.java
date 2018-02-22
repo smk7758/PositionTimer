@@ -6,6 +6,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.github.smk7758.PositionTimer.Main.PositionType;
+
 public class CommandExecuter implements CommandExecutor {
 	public Main main = null;
 
@@ -28,7 +30,7 @@ public class CommandExecuter implements CommandExecutor {
 					return false;
 				}
 				Player player = (Player) sender;
-				main.setStartPosition(args[1], player);
+				main.setPosition(args[1], PositionType.Start, player);
 				SendLog.send("Compleate adding start position.", sender);
 			} else if (args[0].equalsIgnoreCase("removestart")) {
 				if (args.length <= 1) {
@@ -44,7 +46,7 @@ public class CommandExecuter implements CommandExecutor {
 					return false;
 				}
 				Player player = (Player) sender;
-				main.setEndPosition(args[1], player);
+				main.setPosition(args[1], PositionType.End, player);
 				SendLog.send("Compleate adding end position.", sender);
 			} else if (args[0].equalsIgnoreCase("removeend")) {
 				if (args.length <= 1) {
@@ -58,11 +60,18 @@ public class CommandExecuter implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("save")) {
 				main.saveConfig();
 				SendLog.send("Config has been saved.", sender);
+			} else if (args[0].equalsIgnoreCase("debug")) {
+				Main.debug_mode = !Main.debug_mode;
+				SendLog.debug("DebugMode: " + Main.debug_mode);
 			} else if (args[0].equalsIgnoreCase("reload")) {
 				main.reloadConfig();
 				SendLog.send("Config has been reloaded.", sender);
 			} else if (args[0].equalsIgnoreCase("help")) {
 				SendLog.debug("DEBUG", sender);
+			} else if (args[0].equalsIgnoreCase("startloop")) {
+				main.startLoop();
+			} else if (args[0].equalsIgnoreCase("stoploop")) {
+				main.stopLoop();
 			}
 			return true;
 		}
