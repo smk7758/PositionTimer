@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.smk7758</groupId>
 	<artifactId>PositionTimer</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<repositories>
 		<repository>
 			<id>spigot-repo</id>
@@ -11,7 +11,7 @@
 		</repository>
 	</repositories>
 	<dependencies>
-		<!--Bukkit API -->
+		<!--Spigot API -->
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
