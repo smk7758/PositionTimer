@@ -7,7 +7,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.github.smk7758.PositionTimer.Main.PositionType;
-import com.github.smk7758.PositionTimer.Util.SendLog;
 
 public class CommandExecuter implements CommandExecutor {
 	public Main main = null;

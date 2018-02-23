@@ -1,12 +1,10 @@
-package com.github.smk7758.PositionTimer.Util;
+package com.github.smk7758.PositionTimer;
 
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-
-import com.github.smk7758.PositionTimer.Main;
 
 public class SendLog {
 	private static final String chat_prefix = "[" + ChatColor.GREEN + Main.plugin_name + ChatColor.RESET + "] ";
