@@ -6,3 +6,4 @@ permissions:
 commands:
   PositionTimer:
     description: PositionTimer's command.
+    aliases: point

@@ -12,3 +12,5 @@ Positions:
       X: 0.0
       Y: 0.0
       Z: 0.0
+ExceptPlayers:
+ - player_uuid: player_name

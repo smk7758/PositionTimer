@@ -4,7 +4,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -12,6 +15,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
+
+import com.github.smk7758.PositionTimer.Util.SendLog;
 
 public class Main extends JavaPlugin {
 	public static final String plugin_name = "PositionTimer";
@@ -19,8 +25,12 @@ public class Main extends JavaPlugin {
 	private final String pos = "Positions";
 	private CommandExecuter command_executer = new CommandExecuter(this);
 	public Map<String, Location> start_positions = new HashMap<>(), end_positions = new HashMap<>();
+	public Set<String> positions_enable = null;
+	public Map<Player, Boolean> player_except = new HashMap<>();
 	public Map<Player, LocalDateTime> in_timer_player = new HashMap<>();
+	// public List<Player, Duration> player_time = new ArrayList<>();
 	private BukkitTask loop = null;
+	private Scoreboard scoreboard = null;
 
 	public enum PositionType {
 		Start, End;
@@ -30,6 +40,7 @@ public class Main extends JavaPlugin {
 	public void onEnable() {
 		if (!Main.plugin_name.equals(getDescription().getName())) getPluginLoader().disablePlugin(this);
 		getCommand(plugin_name).setExecutor(command_executer);
+		scoreboard = getServer().getScoreboardManager().getNewScoreboard();
 		saveDefaultConfig();
 		startLoop();
 	}
@@ -62,20 +73,31 @@ public class Main extends JavaPlugin {
 	}
 
 	private void loop() {
+		// get enable;
+		positions_enable = new HashSet<>();
+		for (String name : start_positions.keySet()) {
+			if (getConfigEnable(name)) positions_enable.add(name);
+		}
+
 		loop = new BukkitRunnable() {
 			@Override
 			public void run() {
 				for (Player player : getServer().getOnlinePlayers()) {
 					if (!in_timer_player.containsKey(player)) {
-						for (Location loc : start_positions.values()) {
-							if (loc != null && player.getLocation().getBlock().getLocation().equals(loc)) {
-								onStartPosition(loc, player);
+						for (Entry<String, Location> entry : start_positions.entrySet()) {
+							// TODO: if文
+							if (entry.getValue() != null
+									&& positions_enable.contains(entry.getKey())
+									&& player.getLocation().getBlock().getLocation().equals(entry.getValue())) {
+								onStartPosition(entry.getValue(), player);
 							}
 						}
 					} else {
-						for (Location loc : end_positions.values()) {
-							if (loc != null && player.getLocation().getBlock().getLocation().equals(loc)) {
-								onEndPosition(loc, player);
+						for (Entry<String, Location> entry : end_positions.entrySet()) {
+							if (entry.getValue() != null
+									&& positions_enable.contains(entry.getKey())
+									&& player.getLocation().getBlock().getLocation().equals(entry.getValue())) {
+								onEndPosition(entry.getValue(), player);
 							}
 						}
 					}
@@ -97,6 +119,7 @@ public class Main extends JavaPlugin {
 	public void onStartPosition(Location loc, Player player) {
 		SendLog.debug("onStartPosition");
 		in_timer_player.put(player, LocalDateTime.now());
+		player.sendTitle("", "Start", 5, 50, 5);
 	}
 
 	public void onEndPosition(Location loc, Player player) {
@@ -106,6 +129,7 @@ public class Main extends JavaPlugin {
 		SendLog.debug("End: " + player.getName() + ", from: " + start_time + ", to: " + now_time);
 		SendLog.send("Time: " + getTime(start_time, now_time), player);
 		in_timer_player.remove(player);
+		player.sendTitle("", "End", 5, 50, 5);
 	}
 
 	private String getTime(Temporal start, Temporal end) {
@@ -220,6 +244,10 @@ public class Main extends JavaPlugin {
 		}
 	}
 
+	public boolean getConfigEnable(String name) {
+		return getConfig().getBoolean(getPath(name), true);
+	}
+
 	private String getPositionPath(String name, PositionType type) {
 		return getPath(pos, name, type.toString());
 	}
@@ -232,5 +260,9 @@ public class Main extends JavaPlugin {
 			sb.append(paths[i]);
 		}
 		return sb.toString();
+	}
+
+	public Scoreboard getScoreBoard() {
+		return scoreboard;
 	}
 }
