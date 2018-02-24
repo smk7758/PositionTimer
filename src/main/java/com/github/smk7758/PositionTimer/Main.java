@@ -1,40 +1,31 @@
 package com.github.smk7758.PositionTimer;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.Temporal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 
+import com.github.smk7758.PositionTimer.Position.PositionType;
 import com.github.smk7758.PositionTimer.Util.SendLog;
 
 public class Main extends JavaPlugin {
 	public static final String plugin_name = "PositionTimer";
 	public static boolean debug_mode = true;
-	private final String pos = "Positions";
 	private CommandExecuter command_executer = new CommandExecuter(this);
-	public Map<String, Location> start_positions = new HashMap<>(), end_positions = new HashMap<>();
-	public Set<String> positions_enable = null;
+	private PositionListner position_listner = new PositionListner(this);
+	private ConfigManager config_manager = new ConfigManager(this);
+	public Set<Position> positions = new HashSet<>();
 	public Map<Player, Boolean> player_except = new HashMap<>();
-	public Map<Player, LocalDateTime> in_timer_player = new HashMap<>();
-	// public List<Player, Duration> player_time = new ArrayList<>();
-	private BukkitTask loop = null;
+	// public Map<String, Location> start_positions = new HashMap<>(), end_positions = new HashMap<>();
+	// public Set<String> positions_enable = null;
+	// public Map<Player, LocalDateTime> in_timer_player = new HashMap<>();
+	// public Map<Player, Duration> player_time = new HashMap<>();// player_time.entrySet().stream().sorted();
 	private Scoreboard scoreboard = null;
-
-	public enum PositionType {
-		Start, End;
-	}
 
 	@Override
 	public void onEnable() {
@@ -42,21 +33,17 @@ public class Main extends JavaPlugin {
 		getCommand(plugin_name).setExecutor(command_executer);
 		scoreboard = getServer().getScoreboardManager().getNewScoreboard();
 		saveDefaultConfig();
-		startLoop();
+		position_listner.startLoop();
 	}
 
 	@Override
 	public void onDisable() {
 	}
 
-	public CommandExecuter getCommandExecuter() {
-		return command_executer;
-	}
-
 	@Override
 	public void saveConfig() {
 		super.saveConfig();
-		savePositions();
+		save();
 	}
 
 	@Override
@@ -68,201 +55,134 @@ public class Main extends JavaPlugin {
 	@Override
 	public void reloadConfig() {
 		super.reloadConfig();
-		loadPositions();
+		load();
 		debug_mode = getConfig().getBoolean("DebugMode");
 	}
 
-	private void loop() {
-		// get enable;
-		positions_enable = new HashSet<>();
-		for (String name : start_positions.keySet()) {
-			if (getConfigEnable(name)) positions_enable.add(name);
-		}
-
-		loop = new BukkitRunnable() {
-			@Override
-			public void run() {
-				for (Player player : getServer().getOnlinePlayers()) {
-					if (!in_timer_player.containsKey(player)) {
-						for (Entry<String, Location> entry : start_positions.entrySet()) {
-							// TODO: if文
-							if (entry.getValue() != null
-									&& positions_enable.contains(entry.getKey())
-									&& player.getLocation().getBlock().getLocation().equals(entry.getValue())) {
-								onStartPosition(entry.getValue(), player);
-							}
-						}
-					} else {
-						for (Entry<String, Location> entry : end_positions.entrySet()) {
-							if (entry.getValue() != null
-									&& positions_enable.contains(entry.getKey())
-									&& player.getLocation().getBlock().getLocation().equals(entry.getValue())) {
-								onEndPosition(entry.getValue(), player);
-							}
-						}
-					}
-				}
-				in_timer_player.forEach((player, time) -> SendLog
-						.debug("In: " + player.getName() + ", from: " + time.toString()));
-			}
-		}.runTaskTimer(this, 0, 1);
+	public void setPositionEnable(String name) {
+		Position position = getPositionWithCreate(name);
+		position.enable = !position.enable;
 	}
 
-	public void stopLoop() {
-		loop.cancel();
+	public void setPositionEnable(String name, boolean enable) {
+		getPositionWithCreate(name).setEnable(enable);
+		// for (Position position : positions) {
+		// if (position.equalName(name)) {
+		// position.setEnable(enable);
+		// return;
+		// }
+		// }
+		// positions.add(new Position(name).setEnable(enable));
 	}
 
-	public void startLoop() {
-		loop();
-	}
+	// public void setPositionEnable(String name, boolean enable) {
+	// if (enable) {
+	// if (!positions_enable.contains(name)) positions_enable.add(name);
+	// } else {
+	// positions_enable.remove(name);
+	// }
+	// }
 
-	public void onStartPosition(Location loc, Player player) {
-		SendLog.debug("onStartPosition");
-		in_timer_player.put(player, LocalDateTime.now());
-		player.sendTitle("", "Start", 5, 50, 5);
-	}
-
-	public void onEndPosition(Location loc, Player player) {
-		LocalDateTime now_time = LocalDateTime.now();
-		SendLog.debug("onEndPosition");
-		LocalDateTime start_time = in_timer_player.get(player);
-		SendLog.debug("End: " + player.getName() + ", from: " + start_time + ", to: " + now_time);
-		SendLog.send("Time: " + getTime(start_time, now_time), player);
-		in_timer_player.remove(player);
-		player.sendTitle("", "End", 5, 50, 5);
-	}
-
-	private String getTime(Temporal start, Temporal end) {
-		Duration duration = Duration.between(start, end);
-		StringBuilder sb = new StringBuilder();
-		sb.append(duration.getSeconds());
-		sb.append('.');
-		sb.append(duration.getNano()).delete(sb.length() - 6, sb.length());
-		sb.append('s');
-		return sb.toString();
-	}
-
-	public void setPosition(String name, PositionType type, Player player) {
+	// TODO
+	public void setPositionLocation(String name, PositionType type, Player player) {
 		Location loc = player.getLocation().getBlock().getLocation();
-		switch (type) {
-			case Start:
-				setStartPosition(name, loc);
-				break;
-			case End:
-				setEndPosition(name, loc);
-				break;
-			default:
-				SendLog.error("Please set Position Type.");
-		}
+		getPositionWithCreate(name).setLocation(loc, type);
+		// for (Position position : positions) {
+		// if (position.equalName(name)) {
+		// position.setLocation(loc, type);
+		// return;
+		// }
+		// }
+		// positions.add(new Position(name).setLocation(loc, type));
 	}
 
-	public void setStartPosition(String name, Location loc) {
-		start_positions.put(name, loc);
-		setConfigLocation(PositionType.Start, name, loc);
+	public void removePositionLocation(String name, PositionType type) {
+		getPositionWithCreate(name).setLocation(null, type);
+		// for (Position position : positions) {
+		// if (position.equalName(name)) {
+		// position.setLocation(null, type);
+		// return;
+		// }
+		// }
 	}
 
-	public void removeStartPosition(String name) {
-		start_positions.remove(name);
-		setConfigLocation(PositionType.Start, name, null);
-	}
-
-	public void setEndPosition(String name, Location loc) {
-		end_positions.put(name, loc);
-		setConfigLocation(PositionType.End, name, loc);
-	}
-
-	public void removeEndPosition(String name) {
-		end_positions.remove(name);
-		setConfigLocation(PositionType.End, name, null);
-	}
-
-	// save
-	public void savePositions() {
-		savePosition(start_positions, PositionType.Start);
-		savePosition(end_positions, PositionType.End);
-	}
-
-	public void savePosition(Map<String, Location> positions, PositionType type) {
-		positions.entrySet().forEach(entry -> setConfigLocation(type, entry.getKey(), entry.getValue()));
-	}
-
-	public void setConfigLocation(PositionType type, String name, Location loc) {
-		setConfigLocation(getPositionPath(name, type), loc);
-	}
-
-	public void setConfigLocation(String path, Location loc) {
-		if (loc != null) {
-			getConfig().set(path + ".World", loc.getWorld().getName());
-			getConfig().set(path + ".X", loc.getX());
-			getConfig().set(path + ".Y", loc.getY());
-			getConfig().set(path + ".Z", loc.getZ());
+	public Position getPositionWithCreate(String name) {
+		Position position = getPosition(name);
+		if (position != null) {
+			return position;
 		} else {
-			getConfig().set(path, null);
+			position = new Position(name);
+			positions.add(position);
+			return position;
 		}
+	}
+
+	public Position getPosition(String name) {
+		for (Position position : positions) {
+			if (position.equalName(name)) {
+				return position;
+			}
+		}
+		return null;
+	}
+
+	public void removePosition(String name) {
+		getConfigManager().removePosition(name);
+		Position position = getPosition(name);
+		if (position != null) positions.remove(position);
 	}
 
 	// load
-	public void loadPositions() {
+	public void load() {
 		SendLog.debug("loadPositions");
-		loadPosition(start_positions, PositionType.Start);
-		loadPosition(end_positions, PositionType.End);
+		loadPositionLocations(PositionType.Start);
+		loadPositionLocations(PositionType.End);
+		loadEnablePositions();
 	}
 
-	public void loadPosition(Map<String, Location> positions, PositionType type) {
-		for (String name : getConfig().getConfigurationSection(pos).getKeys(false)) {
-			if (name != null) positions.put(name, getConfigLocation(name, type));
+	public void loadPositionLocations(PositionType type) {
+		for (String name : config_manager.getConfigPositionNames()) {
+			getPositionWithCreate(name).setLocation(config_manager.getConfigLocation(name, type), type);
 		}
 	}
 
-	public Location getConfigLocation(String name, PositionType type) {
-		return getConfigLocation(getPositionPath(name, type));
-	}
-
-	public Location getConfigLocation(String path) {
-		SendLog.debug("config loc path: " + path);
-		World world = null;
-		int x = 0, y = 0, z = 0;
-		// TODO
-		// if (getConfig().contains(path + ".World") || getConfig().contains(path + ".X")
-		// || getConfig().contains(path + ".Y") || getConfig().contains(path + ".Z")) {
-		// SendLog.error("Cannot find location type.");
-		// return null;
-		// }
-		x = getConfig().getInt(path + ".X");
-		y = getConfig().getInt(path + ".Y");
-		z = getConfig().getInt(path + ".Z");
-		SendLog.debug("test");
-		String world_name = getConfig().getString(path + ".World");
-		SendLog.debug("World: " + world_name);
-		if (world_name != null) world = getServer().getWorld(world_name);
-		if (world == null) {
-			SendLog.error("Cannot load world in Path: " + path + " in config.");
-			return null;
-		} else {
-			SendLog.debug("Location has been created.");
-			return new Location(world, x, y, z);
+	public void loadEnablePositions() {
+		for (String name : config_manager.getConfigPositionNames()) {
+			getPositionWithCreate(name).setEnable(config_manager.getConfigEnable(name));
 		}
 	}
 
-	public boolean getConfigEnable(String name) {
-		return getConfig().getBoolean(getPath(name), true);
+	// save
+	public void save() {
+		positions.forEach(position -> config_manager.setPosition(position));
 	}
 
-	private String getPositionPath(String name, PositionType type) {
-		return getPath(pos, name, type.toString());
+	// public void savePositions(PositionType type) {
+	// positions.forEach(position -> config_manager
+	// .setConfigLocation(type, position.name, position.getLocation(type)));
+	// }
+	//
+	// public void saveEnablePositions() {
+	// positions.forEach(position -> config_manager.setConfigEnable(position.name, position.enable));
+	// }
+
+	public CommandExecuter getCommandExecuter() {
+		return command_executer;
 	}
 
-	public String getPath(String... paths) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(paths[0]);
-		for (int i = 1; i < paths.length; i++) {
-			sb.append('.');
-			sb.append(paths[i]);
-		}
-		return sb.toString();
+	public PositionListner getPositionListner() {
+		return position_listner;
+	}
+
+	public ConfigManager getConfigManager() {
+		return config_manager;
 	}
 
 	public Scoreboard getScoreBoard() {
 		return scoreboard;
 	}
+
+	// player config 保存
+	// remove B
+	// Timeを表示するのは、Title, Sidebar, Chatか。
 }
