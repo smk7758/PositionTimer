@@ -27,47 +27,6 @@ public class CommandExecuter implements CommandExecutor {
 			if (args.length <= 0) {
 				SendLog.error("Too short argument.", sender);
 				return false;
-				// } else if (args[0].equalsIgnoreCase("setenable")) {
-				// if (args.length <= 1) {
-				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
-				// return false;
-				// }
-				// } else if (args[0].equalsIgnoreCase("setstart")) {
-				// if (!(sender instanceof Player)) {
-				// return false;
-				// }
-				// if (args.length <= 1) {
-				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
-				// return false;
-				// }
-				// Player player = (Player) sender;
-				// main.setPositionLocation(args[1], PositionType.Start, player);
-				// SendLog.send("Compleate adding start position.", sender);
-				// } else if (args[0].equalsIgnoreCase("removestart")) {
-				// if (args.length <= 1) {
-				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
-				// return false;
-				// }
-				// main.removePositionLocation(args[1], PositionType.Start);
-				// SendLog.send("Compleate removing start position.", sender);
-				// } else if (args[0].equalsIgnoreCase("setend")) {
-				// if (!(sender instanceof Player)) {
-				// return false;
-				// }
-				// if (args.length <= 1) {
-				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
-				// return false;
-				// }
-				// Player player = (Player) sender;
-				// main.setPositionLocation(args[1], PositionType.End, player);
-				// SendLog.send("Compleate adding end position.", sender);
-				// } else if (args[0].equalsIgnoreCase("removeend")) {
-				// if (args.length <= 1) {
-				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
-				// return false;
-				// }
-				// main.removePositionLocation(args[1], PositionType.End);
-				// SendLog.send("Compleate removing end position.", sender);
 			} else if (args[0].equalsIgnoreCase("set")) {
 				if (!(sender instanceof Player)) {
 					return false;
@@ -128,12 +87,12 @@ public class CommandExecuter implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("save")) {
 				main.saveConfig();
 				SendLog.send("Config has been saved.", sender);
-			} else if (args[0].equalsIgnoreCase("debug")) {
-				Main.debug_mode = !Main.debug_mode;
-				SendLog.debug("DebugMode: " + Main.debug_mode);
 			} else if (args[0].equalsIgnoreCase("reload")) {
 				main.reloadConfig();
 				SendLog.send("Config has been reloaded.", sender);
+			} else if (args[0].equalsIgnoreCase("debug")) {
+				Main.debug_mode = !Main.debug_mode;
+				SendLog.debug("DebugMode: " + Main.debug_mode, sender);
 			} else if (args[0].equalsIgnoreCase("help")) {
 				SendLog.debug("DEBUG", sender);
 			} else if (args[0].equalsIgnoreCase("startloop")) {

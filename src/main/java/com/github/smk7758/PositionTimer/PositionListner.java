@@ -20,7 +20,7 @@ public class PositionListner {
 	}
 
 	public void startLoop() {
-		// if (loop != null && !loop.isCancelled()) stopLoop();
+		if (loop != null && !loop.isCancelled()) stopLoop();
 		loop();
 	}
 

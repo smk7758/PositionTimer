@@ -2,7 +2,6 @@ package com.github.smk7758.PositionTimer;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,7 +34,7 @@ public class Position {
 		return this.name.equals(name);
 	}
 
-	// TODO
+	// TODO: 雑。
 	@Override
 	public int hashCode() {
 		return 0;
@@ -54,13 +53,15 @@ public class Position {
 		else throw new IllegalArgumentException("Illegal PositionType.");
 	}
 
-	// TODO
 	public Position setEnable(boolean enable) {
 		this.enable = enable;
 		return this;
 	}
 
+	// TODO: not sorted, bug
 	public Stream<Entry<Player, Duration>> getPlayerTimesSorted() {
-		return player_times.entrySet().stream().sorted(Collections.reverseOrder(Entry.comparingByValue()));
+		return player_times.entrySet().stream().sorted(Entry.comparingByValue());
+		// return player_times.entrySet().stream().sorted();
+		// return player_times.entrySet().stream().sorted(Collections.reverseOrder(Entry.comparingByValue()));
 	}
 }
