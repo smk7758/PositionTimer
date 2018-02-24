@@ -20,7 +20,7 @@ public class PositionListner {
 	}
 
 	public void startLoop() {
-		if (loop != null && !loop.isCancelled()) stopLoop();
+		// if (loop != null && !loop.isCancelled()) stopLoop();
 		loop();
 	}
 
@@ -35,12 +35,16 @@ public class PositionListner {
 				for (Player player : main.getServer().getOnlinePlayers()) {
 					for (Position position : main.positions) {
 						if (!canUsePosition(position)) continue;
-						// SendLog.debug(position.name);
+						if (isPlayerOnPosition(player, position, PositionType.Start)
+								|| isPlayerOnPosition(player, position, PositionType.End)) {
+							SendLog.debug(position.name);
+						}
 						if (!isPlayerInTimer(player, position)) {
 							if (isPlayerOnPosition(player, position, PositionType.Start)) {
 								onStartPosition(position, player);
 							}
 						} else {
+							SendLog.debug(position.name);
 							if (isPlayerOnPosition(player, position, PositionType.End)) {
 								onEndPosition(position, player);
 							}
@@ -81,6 +85,6 @@ public class PositionListner {
 	}
 
 	public boolean isPlayerOnPosition(Player player, Position position, PositionType type) {
-		return player.getLocation().equals(position.getLocation(type));
+		return player.getLocation().getBlock().getLocation().equals(position.getLocation(type));
 	}
 }

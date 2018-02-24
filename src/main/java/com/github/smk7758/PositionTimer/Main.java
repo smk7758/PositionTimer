@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
@@ -66,44 +65,15 @@ public class Main extends JavaPlugin {
 
 	public void setPositionEnable(String name, boolean enable) {
 		getPositionWithCreate(name).setEnable(enable);
-		// for (Position position : positions) {
-		// if (position.equalName(name)) {
-		// position.setEnable(enable);
-		// return;
-		// }
-		// }
-		// positions.add(new Position(name).setEnable(enable));
 	}
 
-	// public void setPositionEnable(String name, boolean enable) {
-	// if (enable) {
-	// if (!positions_enable.contains(name)) positions_enable.add(name);
-	// } else {
-	// positions_enable.remove(name);
-	// }
-	// }
-
-	// TODO
 	public void setPositionLocation(String name, PositionType type, Player player) {
-		Location loc = player.getLocation().getBlock().getLocation();
-		getPositionWithCreate(name).setLocation(loc, type);
-		// for (Position position : positions) {
-		// if (position.equalName(name)) {
-		// position.setLocation(loc, type);
-		// return;
-		// }
-		// }
-		// positions.add(new Position(name).setLocation(loc, type));
+		if (player == null) throw new IllegalArgumentException("Player is null.");
+		getPositionWithCreate(name).setLocation(player.getLocation().getBlock().getLocation(), type);
 	}
 
 	public void removePositionLocation(String name, PositionType type) {
 		getPositionWithCreate(name).setLocation(null, type);
-		// for (Position position : positions) {
-		// if (position.equalName(name)) {
-		// position.setLocation(null, type);
-		// return;
-		// }
-		// }
 	}
 
 	public Position getPositionWithCreate(String name) {
@@ -157,15 +127,6 @@ public class Main extends JavaPlugin {
 		positions.forEach(position -> config_manager.setPosition(position));
 	}
 
-	// public void savePositions(PositionType type) {
-	// positions.forEach(position -> config_manager
-	// .setConfigLocation(type, position.name, position.getLocation(type)));
-	// }
-	//
-	// public void saveEnablePositions() {
-	// positions.forEach(position -> config_manager.setConfigEnable(position.name, position.enable));
-	// }
-
 	public CommandExecuter getCommandExecuter() {
 		return command_executer;
 	}
@@ -182,7 +143,6 @@ public class Main extends JavaPlugin {
 		return scoreboard;
 	}
 
-	// player config 保存
-	// remove B
+	// player config 保存 rank
 	// Timeを表示するのは、Title, Sidebar, Chatか。
 }

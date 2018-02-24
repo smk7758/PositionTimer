@@ -27,48 +27,47 @@ public class CommandExecuter implements CommandExecutor {
 			if (args.length <= 0) {
 				SendLog.error("Too short argument.", sender);
 				return false;
-			} else if (args[0].equalsIgnoreCase("setenable")) {
-				if (args.length <= 1) {
-					SendLog.error("Too short argument. Please write name in the second argument.", sender);
-					return false;
-				}
-
-			} else if (args[0].equalsIgnoreCase("setstart")) {
-				if (!(sender instanceof Player)) {
-					return false;
-				}
-				if (args.length <= 1) {
-					SendLog.error("Too short argument. Please write name in the second argument.", sender);
-					return false;
-				}
-				Player player = (Player) sender;
-				main.setPositionLocation(args[1], PositionType.Start, player);
-				SendLog.send("Compleate adding start position.", sender);
-			} else if (args[0].equalsIgnoreCase("removestart")) {
-				if (args.length <= 1) {
-					SendLog.error("Too short argument. Please write name in the second argument.", sender);
-					return false;
-				}
-				main.removePositionLocation(args[1], PositionType.Start);
-				SendLog.send("Compleate removing start position.", sender);
-			} else if (args[0].equalsIgnoreCase("setend")) {
-				if (!(sender instanceof Player)) {
-					return false;
-				}
-				if (args.length <= 1) {
-					SendLog.error("Too short argument. Please write name in the second argument.", sender);
-					return false;
-				}
-				Player player = (Player) sender;
-				main.setPositionLocation(args[1], PositionType.End, player);
-				SendLog.send("Compleate adding end position.", sender);
-			} else if (args[0].equalsIgnoreCase("removeend")) {
-				if (args.length <= 1) {
-					SendLog.error("Too short argument. Please write name in the second argument.", sender);
-					return false;
-				}
-				main.removePositionLocation(args[1], PositionType.End);
-				SendLog.send("Compleate removing end position.", sender);
+				// } else if (args[0].equalsIgnoreCase("setenable")) {
+				// if (args.length <= 1) {
+				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
+				// return false;
+				// }
+				// } else if (args[0].equalsIgnoreCase("setstart")) {
+				// if (!(sender instanceof Player)) {
+				// return false;
+				// }
+				// if (args.length <= 1) {
+				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
+				// return false;
+				// }
+				// Player player = (Player) sender;
+				// main.setPositionLocation(args[1], PositionType.Start, player);
+				// SendLog.send("Compleate adding start position.", sender);
+				// } else if (args[0].equalsIgnoreCase("removestart")) {
+				// if (args.length <= 1) {
+				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
+				// return false;
+				// }
+				// main.removePositionLocation(args[1], PositionType.Start);
+				// SendLog.send("Compleate removing start position.", sender);
+				// } else if (args[0].equalsIgnoreCase("setend")) {
+				// if (!(sender instanceof Player)) {
+				// return false;
+				// }
+				// if (args.length <= 1) {
+				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
+				// return false;
+				// }
+				// Player player = (Player) sender;
+				// main.setPositionLocation(args[1], PositionType.End, player);
+				// SendLog.send("Compleate adding end position.", sender);
+				// } else if (args[0].equalsIgnoreCase("removeend")) {
+				// if (args.length <= 1) {
+				// SendLog.error("Too short argument. Please write name in the second argument.", sender);
+				// return false;
+				// }
+				// main.removePositionLocation(args[1], PositionType.End);
+				// SendLog.send("Compleate removing end position.", sender);
 			} else if (args[0].equalsIgnoreCase("set")) {
 				if (!(sender instanceof Player)) {
 					return false;
@@ -144,7 +143,7 @@ public class CommandExecuter implements CommandExecutor {
 				main.getPositionListner().stopLoop();
 				SendLog.send("Loop has been stopped.", sender);
 			} else {
-				SendLog.error("Illegal argument.");
+				SendLog.error("Illegal argument.", sender);
 			}
 			return true;
 		}
@@ -200,23 +199,22 @@ public class CommandExecuter implements CommandExecutor {
 		if (position == null) throw new IllegalArgumentException("Position is null.");
 		Iterator<Entry<Player, Duration>> player_times = position.getPlayerTimesSorted().iterator();
 		Entry<Player, Duration> entry = null;
-		StringBuilder sb = new StringBuilder();
-		sb.append("Position: ");
-		sb.append(position.name);
+		SendLog.send("Position: " + position.name, sender);
 		if (player_times.hasNext()) {
-			for (int i = 0; i <= 5; i++) {
+			for (int i = 1; i <= 5; i++) {
+				StringBuilder sb = new StringBuilder();
 				if (!player_times.hasNext()) break;
 				entry = player_times.next();
+				sb.append(' ');
 				sb.append(i);
+				sb.append(" : ");
 				sb.append(entry.getKey().getName());
 				sb.append(' ');
 				sb.append(Util.getTimeText(entry.getValue()));
-				sb.append('\n');
+				SendLog.send(sb.toString(), sender);
 			}
 		} else {
-			sb.append('\n');
-			sb.append("  Rank is none.");
+			SendLog.send("Rank is none.", sender);
 		}
-		SendLog.send(sb.toString(), sender);
 	}
 }
