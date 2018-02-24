@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -29,6 +30,7 @@ public class CommandExecuter implements CommandExecutor {
 				return false;
 			} else if (args[0].equalsIgnoreCase("set")) {
 				if (!(sender instanceof Player)) {
+					SendLog.error("Must use this command from Player.", sender);
 					return false;
 				}
 				if (args.length <= 2) {
@@ -68,6 +70,7 @@ public class CommandExecuter implements CommandExecutor {
 				}
 			} else if (args[0].equalsIgnoreCase("show")) {
 				if (args.length <= 1) {
+					SendLog.error("Too short argument.", sender);
 					return false;
 				} else if (args.length <= 2) {
 					if (args[1].equalsIgnoreCase("positions")) {
@@ -107,7 +110,10 @@ public class CommandExecuter implements CommandExecutor {
 			return true;
 		}
 		return false;
+	}
 
+	public void showCommandList(CommandSender sender) {
+		SendLog.send("PositionTimer", sender);
 	}
 
 	public void showPositions(CommandSender sender) {
@@ -156,8 +162,8 @@ public class CommandExecuter implements CommandExecutor {
 
 	public void showRank(Position position, CommandSender sender) {
 		if (position == null) throw new IllegalArgumentException("Position is null.");
-		Iterator<Entry<Player, Duration>> player_times = position.getPlayerTimesSorted().iterator();
-		Entry<Player, Duration> entry = null;
+		Iterator<Entry<OfflinePlayer, Duration>> player_times = position.getPlayerTimesSorted().iterator();
+		Entry<OfflinePlayer, Duration> entry = null;
 		SendLog.send("Position: " + position.name, sender);
 		if (player_times.hasNext()) {
 			for (int i = 1; i <= 5; i++) {

@@ -1,9 +1,9 @@
 name: PositionTimer
 main: com.github.smk7758.PositionTimer.Main
-version: 0.1.0
+version: 0.1.2
 author: smk7758
 permissions:
 commands:
   PositionTimer:
     description: PositionTimer's command.
-    aliases: point
+    aliases: position, point, p

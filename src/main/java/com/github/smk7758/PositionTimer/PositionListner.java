@@ -37,7 +37,7 @@ public class PositionListner {
 						if (!canUsePosition(position)) continue;
 						if (isPlayerOnPosition(player, position, PositionType.Start)
 								|| isPlayerOnPosition(player, position, PositionType.End)) {
-							SendLog.debug(position.name);
+							// SendLog.debug(position.name);
 						}
 						if (!isPlayerInTimer(player, position)) {
 							if (isPlayerOnPosition(player, position, PositionType.Start)) {

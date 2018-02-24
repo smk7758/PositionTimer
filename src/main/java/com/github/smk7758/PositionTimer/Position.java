@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 public class Position {
@@ -15,7 +16,7 @@ public class Position {
 	private Location start_loc = null, end_loc = null;
 	public boolean enable = true;
 	public Map<Player, LocalDateTime> players_started = new HashMap<>();
-	public Map<Player, Duration> player_times = new HashMap<>();
+	public Map<OfflinePlayer, Duration> player_times = new HashMap<>();
 
 	public enum PositionType {
 		Start, End;
@@ -59,7 +60,7 @@ public class Position {
 	}
 
 	// TODO: not sorted, bug
-	public Stream<Entry<Player, Duration>> getPlayerTimesSorted() {
+	public Stream<Entry<OfflinePlayer, Duration>> getPlayerTimesSorted() {
 		return player_times.entrySet().stream().sorted(Entry.comparingByValue());
 		// return player_times.entrySet().stream().sorted();
 		// return player_times.entrySet().stream().sorted(Collections.reverseOrder(Entry.comparingByValue()));

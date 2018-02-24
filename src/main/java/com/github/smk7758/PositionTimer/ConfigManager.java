@@ -1,8 +1,14 @@
 package com.github.smk7758.PositionTimer;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
 import com.github.smk7758.PositionTimer.Position.PositionType;
@@ -11,7 +17,7 @@ import com.github.smk7758.PositionTimer.Util.Util;
 
 public class ConfigManager {
 	private Main main = null;
-	private final String pos = "Positions", enable_s = "enable";
+	private final String pos = "Positions", enable_s = "enable", player_time_s = "PlayerTime";
 
 	public ConfigManager(Main main) {
 		this.main = main;
@@ -42,6 +48,15 @@ public class ConfigManager {
 		} else {
 			main.getConfig().set(path, null);
 		}
+	}
+
+	public void setConfigPlayerTime(String name, Map<OfflinePlayer, Duration> player_time) {
+		player_time.forEach((player, duration) -> setConfigPlayerTime(name, player, duration));
+	}
+
+	public void setConfigPlayerTime(String name, OfflinePlayer player, Duration duration) {
+		main.getConfig().set(Util.getPath(pos, player_time_s, name, player.getUniqueId().toString()),
+				duration.toMillis());
 	}
 
 	public void removePosition(String name) {
@@ -84,6 +99,15 @@ public class ConfigManager {
 
 	public boolean getConfigEnable(String name) {
 		return main.getConfig().getBoolean(Util.getPath(pos, name, "enable"), true);
+	}
+
+	public Map<OfflinePlayer, Duration> getConfigPlayerTime() {
+		Map<OfflinePlayer, Duration> player_time = new HashMap<>();
+		for (String uuid : main.getConfig().getConfigurationSection(Util.getPath(pos, player_time_s)).getKeys(false)) {
+			player_time.put(Bukkit.getOfflinePlayer(UUID.fromString(uuid)),
+					Duration.ofMillis(main.getConfig().getLong(Util.getPath(pos, player_time_s, uuid))));
+		}
+		return player_time;
 	}
 
 	private String getPositionPath(String name, PositionType type) {

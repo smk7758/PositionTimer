@@ -12,5 +12,7 @@ Positions:
       X: 0.0
       Y: 0.0
       Z: 0.0
+    PlayerTime:
+      player_uuid: duration
 ExceptPlayers:
- - player_uuid: player_name
+ - player_uuid
