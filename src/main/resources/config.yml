@@ -2,6 +2,10 @@ DebugMode: false
 Positions:
   test:
     enable: true
+    ShowType:
+      StartStop: title
+      Time: chat
+      Rank: chat
     Start:
       World: world
       X: 0.0

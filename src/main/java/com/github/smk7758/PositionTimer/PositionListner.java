@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import com.github.smk7758.PositionTimer.Position.PositionType;
+import com.github.smk7758.PositionTimer.ConfigManager.PositionType;
 import com.github.smk7758.PositionTimer.Util.SendLog;
 import com.github.smk7758.PositionTimer.Util.Util;
 

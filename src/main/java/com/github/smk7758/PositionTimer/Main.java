@@ -9,7 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
-import com.github.smk7758.PositionTimer.Position.PositionType;
+import com.github.smk7758.PositionTimer.ConfigManager.PositionType;
+import com.github.smk7758.PositionTimer.ConfigManager.ShowTypeNamePath;
 import com.github.smk7758.PositionTimer.Util.SendLog;
 
 public class Main extends JavaPlugin {
@@ -18,13 +19,11 @@ public class Main extends JavaPlugin {
 	private CommandExecuter command_executer = new CommandExecuter(this);
 	private PositionListner position_listner = new PositionListner(this);
 	private ConfigManager config_manager = new ConfigManager(this);
+
+	private Scoreboard scoreboard = null;
+
 	public Set<Position> positions = new HashSet<>();
 	public Map<Player, Boolean> player_except = new HashMap<>();
-	// public Map<String, Location> start_positions = new HashMap<>(), end_positions = new HashMap<>();
-	// public Set<String> positions_enable = null;
-	// public Map<Player, LocalDateTime> in_timer_player = new HashMap<>();
-	// public Map<Player, Duration> player_time = new HashMap<>();// player_time.entrySet().stream().sorted();
-	private Scoreboard scoreboard = null;
 
 	@Override
 	public void onEnable() {
@@ -105,21 +104,39 @@ public class Main extends JavaPlugin {
 	// load
 	public void load() {
 		SendLog.debug("loadPositions");
-		loadPositionLocations(PositionType.Start);
-		loadPositionLocations(PositionType.End);
-		loadEnablePositions();
-	}
-
-	public void loadPositionLocations(PositionType type) {
 		for (String name : config_manager.getConfigPositionNames()) {
-			getPositionWithCreate(name).setLocation(config_manager.getConfigLocation(name, type), type);
+			SendLog.debug("Name: " + name);
+			loadPositionLocations(name);
+			loadPositionLocations(name);
+			loadEnablePositions(name);
+			loadPositionShowTypes(name);
 		}
 	}
 
-	public void loadEnablePositions() {
-		for (String name : config_manager.getConfigPositionNames()) {
-			getPositionWithCreate(name).setEnable(config_manager.getConfigEnable(name));
-		}
+	public void loadPositionLocations(String name) {
+		loadPositionLocations(name, PositionType.Start);
+		loadPositionLocations(name, PositionType.End);
+	}
+
+	public void loadPositionLocations(String name, PositionType type) {
+		getPositionWithCreate(name).setLocation(config_manager.getConfigLocation(name, type), type);
+	}
+
+	public void loadEnablePositions(String name) {
+		loadEnablePositions(name, PositionType.Start);
+		loadEnablePositions(name, PositionType.End);
+	}
+
+	public void loadEnablePositions(String name, PositionType type) {
+		getPositionWithCreate(name).setEnable(config_manager.getConfigEnable(name));
+	}
+
+	// TODO: リファクタリング
+	public void loadPositionShowTypes(String name) {
+		Position position = getPositionWithCreate(name);
+		position.show_type_start_stop = config_manager.getConfigShowType(position, ShowTypeNamePath.START_STOP);
+		position.show_type_time = config_manager.getConfigShowType(position, ShowTypeNamePath.TIME);
+		position.show_type_rank = config_manager.getConfigShowType(position, ShowTypeNamePath.RANK);
 	}
 
 	// save

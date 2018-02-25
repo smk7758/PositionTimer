@@ -3,6 +3,7 @@ package com.github.smk7758.PositionTimer;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,16 +12,48 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
-import com.github.smk7758.PositionTimer.Position.PositionType;
 import com.github.smk7758.PositionTimer.Util.SendLog;
 import com.github.smk7758.PositionTimer.Util.Util;
 
 public class ConfigManager {
 	private Main main = null;
-	private final String pos = "Positions", enable_s = "enable", player_time_s = "PlayerTime";
+	private final String pos = "Positions", enable_s = "enable", show_type = "ShowType", player_time_s = "PlayerTime";
 
 	public ConfigManager(Main main) {
 		this.main = main;
+	}
+
+	public enum PositionType {
+		Start, End;
+	}
+
+	public enum ShowType {
+		TITLE, SIDEBAR, CHAT;
+
+		/**
+		 * Get ShowType of the name with equals ignore case.
+		 *
+		 * @param name each ShowName.
+		 * @return Returns ShowType, but if cannot find from the name, returns empty.
+		 */
+		public static Optional<ShowType> get(String name) {
+			for (ShowType type : ShowType.values()) {
+				if (name.equalsIgnoreCase(type.toString())) return Optional.of(type);
+			}
+			return Optional.empty();
+		}
+	}
+
+	public enum ShowTypeNamePath {
+		START_STOP("StartStop", ShowType.TITLE), TIME("Time", ShowType.CHAT), RANK("Rank", ShowType.CHAT);
+
+		final String NAME;
+		ShowType type;
+
+		private ShowTypeNamePath(String name, ShowType type) {
+			this.NAME = name;
+			this.type = type;
+		}
 	}
 
 	public void setPosition(Position position) {
@@ -71,6 +104,7 @@ public class ConfigManager {
 		return getConfigLocation(getPositionPath(name, type));
 	}
 
+	// TODO Optional
 	public Location getConfigLocation(String path) {
 		SendLog.debug("config loc path: " + path);
 		World world = null;
@@ -110,7 +144,14 @@ public class ConfigManager {
 		return player_time;
 	}
 
+	public ShowType getConfigShowType(Position position, ShowTypeNamePath name_path) {
+		String path = Util.getPath(pos, position.name, show_type, name_path.NAME);
+		return ShowType.get(main.getConfig().getString(path)).orElse(name_path.type);
+	}
+
 	private String getPositionPath(String name, PositionType type) {
 		return Util.getPath(pos, name, type.toString());
 	}
+
+	// if double title
 }

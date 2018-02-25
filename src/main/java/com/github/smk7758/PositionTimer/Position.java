@@ -11,16 +11,16 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import com.github.smk7758.PositionTimer.ConfigManager.PositionType;
+import com.github.smk7758.PositionTimer.ConfigManager.ShowType;
+
 public class Position {
 	public String name = "";
 	private Location start_loc = null, end_loc = null;
 	public boolean enable = true;
 	public Map<Player, LocalDateTime> players_started = new HashMap<>();
 	public Map<OfflinePlayer, Duration> player_times = new HashMap<>();
-
-	public enum PositionType {
-		Start, End;
-	}
+	public ShowType show_type_start_stop = null, show_type_time = null, show_type_rank = null;
 
 	public Position(String name) {
 		this.name = name;
@@ -59,10 +59,7 @@ public class Position {
 		return this;
 	}
 
-	// TODO: not sorted, bug
 	public Stream<Entry<OfflinePlayer, Duration>> getPlayerTimesSorted() {
 		return player_times.entrySet().stream().sorted(Entry.comparingByValue());
-		// return player_times.entrySet().stream().sorted();
-		// return player_times.entrySet().stream().sorted(Collections.reverseOrder(Entry.comparingByValue()));
 	}
 }
